@@ -1,3 +1,4 @@
+
 name: Build Docker image
 
 on:
@@ -15,8 +16,17 @@ jobs:
       - name: Récupérer le code
         uses: actions/checkout@v4
 
+      - name: Connexion à Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
       - name: Construire l'image Docker
         run: docker build -t hybafarhat/portfolio-nextjs:${{ inputs.version }} .
 
       - name: Lister les images
         run: docker images
+
+      - name: Publier l'image sur Docker Hub
+        run: docker push hybafarhat/portfolio-nextjs:${{ inputs.version }}
