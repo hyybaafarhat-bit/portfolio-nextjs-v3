@@ -1,0 +1,22 @@
+name: Build Docker image
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version de l'image (ex: v1, v2)"
+        required: true
+        default: v1
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Récupérer le code
+        uses: actions/checkout@v4
+
+      - name: Construire l'image Docker
+        run: docker build -t hybafarhat/portfolio-nextjs:${{ inputs.version }} .
+
+      - name: Lister les images
+        run: docker images

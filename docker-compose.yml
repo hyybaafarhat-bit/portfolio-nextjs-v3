@@ -1,0 +1,13 @@
+services:
+  portfolio:
+    image: hybafarhat/portfolio-nextjs:${VERSION:-v1}
+    build: .
+    container_name: portfolio-nextjs
+    ports:
+      - "3000:3000"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:3000"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
