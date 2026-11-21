@@ -1,4 +1,4 @@
-﻿name: Build and Push Docker image
+name: Build, Push and Deploy
 
 on:
   workflow_dispatch:
@@ -30,3 +30,33 @@ jobs:
           context: .
           push: true
           tags: hybafarhat/portfolio-nextjs:${{ inputs.version }}
+
+  deploy:
+    needs: build
+    runs-on: self-hosted
+    steps:
+      - name: Recuperer le code
+        uses: actions/checkout@v4
+
+      - name: Deployer avec docker compose
+        shell: powershell
+        env:
+          VERSION: ${{ inputs.version }}
+        run: |
+          docker compose down
+          docker compose pull
+          docker compose up -d
+
+      - name: Verifier la sante de l'application
+        shell: powershell
+        run: |
+          $ok = $false
+          for ($i = 1; $i -le 12; $i++) {
+            try {
+              $r = Invoke-WebRequest http://localhost:3000 -UseBasicParsing
+              if ($r.StatusCode -eq 200) { $ok = $true; break }
+            } catch { }
+            Start-Sleep -Seconds 5
+          }
+          if (-not $ok) { throw "Application non disponible sur http://localhost:3000" }
+          Write-Host "Application disponible sur http://localhost:3000"

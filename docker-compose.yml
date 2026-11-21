@@ -4,13 +4,14 @@ services:
     pull_policy: always
     container_name: portfolio-nextjs
     ports:
-      - "3001:3000"
+      - "3000:3000"
     volumes:
-      - ./public/hyba.jpg:/app/public/hyba.jpg:ro
-      - ./public/CV_Hyba_Farhat.pdf:/app/public/CV_Hyba_Farhat.pdf:ro
+      - ${ASSETS_DIR:-./public}/hyba.jpg:/app/public/hyba.jpg:ro
+      - ${ASSETS_DIR:-./public}/CV_Hyba_Farhat.pdf:/app/public/CV_Hyba_Farhat.pdf:ro
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "wget", "-qO-", "http://localhost:3000"]
       interval: 15s
       timeout: 5s
       retries: 5
+
