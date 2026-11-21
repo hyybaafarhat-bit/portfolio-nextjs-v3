@@ -5,3 +5,6 @@ node_modules
 README.md
 Dockerfile
 docker-compose.yml
+
+public/hyba.jpg
+public/CV_Hyba_Farhat.pdf
