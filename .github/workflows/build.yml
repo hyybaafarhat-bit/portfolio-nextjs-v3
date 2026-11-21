@@ -42,10 +42,14 @@ jobs:
         shell: powershell
         env:
           VERSION: ${{ inputs.version }}
+          ASSETS_DIR: C:/portfolio-assets
         run: |
+          $ErrorActionPreference = 'Continue'
           docker compose down
           docker compose pull
+          if ($LASTEXITCODE -ne 0) { exit 1 }
           docker compose up -d
+          if ($LASTEXITCODE -ne 0) { exit 1 }
 
       - name: Verifier la sante de l'application
         shell: powershell
