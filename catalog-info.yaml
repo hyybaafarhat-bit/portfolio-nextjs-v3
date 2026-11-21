@@ -4,7 +4,7 @@ metadata:
   name: portfolio-nextjs
   description: Mon portfolio personnel
   annotations:
-    github.com/project-slug: undefined/undefined
+    github.com/project-slug: hyybaafarhat-bit/portfolio-nextjs-v3
 spec:
   type: website
   lifecycle: production
