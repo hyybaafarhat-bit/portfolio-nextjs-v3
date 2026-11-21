@@ -1,7 +1,7 @@
 services:
   portfolio:
     image: hybafarhat/portfolio-nextjs:${VERSION:-v1}
-    build: .
+    pull_policy: always
     container_name: portfolio-nextjs
     ports:
       - "3000:3000"
