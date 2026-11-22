@@ -1,6 +1,23 @@
 'use client';
 
+import { useState, useEffect } from 'react';
+
 export default function Home() {
+  const [dark, setDark] = useState(false);
+
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem('theme');
+      if (saved) setDark(saved === 'dark');
+      else if (window.matchMedia('(prefers-color-scheme: dark)').matches) setDark(true);
+    } catch (e) {}
+  }, []);
+
+  useEffect(() => {
+    document.documentElement.classList.toggle('dark', dark);
+    try { localStorage.setItem('theme', dark ? 'dark' : 'light'); } catch (e) {}
+  }, [dark]);
+
   const skills = [
     "HTML", "CSS", "JavaScript", "PHP", "Python",
     "React", "Node.js", "Bootstrap", "Tailwind CSS",
@@ -483,6 +500,52 @@ export default function Home() {
           font-size: 12px;
         }
 
+        .theme-toggle {
+          background: transparent;
+          color: #783d5b;
+          border: 1px solid #d96f9b;
+          border-radius: 30px;
+          padding: 8px 16px;
+          font-size: 13px;
+          cursor: pointer;
+          transition: .2s;
+        }
+        .theme-toggle:hover { background: #d96f9b; color: white; }
+
+        html.dark body { background: #1b1220; color: #f1dce8; }
+        html.dark .brand { color: #f0a3c4; }
+        html.dark .links { color: #e6c3d4; }
+        html.dark .theme-toggle { color: #f0b3cf; }
+        html.dark .theme-toggle:hover { color: white; }
+        html.dark .hero {
+          background:
+            radial-gradient(ellipse at 85% 45%, #3a1f33 0%, transparent 40%),
+            radial-gradient(ellipse at 10% 15%, #2e1829 0%, transparent 40%),
+            linear-gradient(120deg, #1b1220, #21142a 55%, #2a1730);
+        }
+        html.dark .hero:before { background: #4a2a4580; }
+        html.dark .hero h1, html.dark .hero h2, html.dark .section-title h2,
+        html.dark .contact-box h2, html.dark .project h3, html.dark .item h3 { color: #fbe6f0; }
+        html.dark .hero-description, html.dark .section-title p, html.dark .about-text,
+        html.dark .project p, html.dark .project li, html.dark .item p,
+        html.dark .contact-box p, html.dark .contact-list, html.dark footer { color: #cfa9bc; }
+        html.dark .hello, html.dark .tag, html.dark .about-icon { background: #3a2036; color: #f0b3cf; }
+        html.dark .about-card, html.dark .skill, html.dark .project, html.dark .cert,
+        html.dark .language, html.dark .projects, html.dark .photo-note {
+          background: #26172c;
+          border-color: #43284a;
+          color: #eed3e0;
+        }
+        html.dark .project-type, html.dark .language span { color: #c68aa8; }
+        html.dark .language strong { color: #f0d3e1; }
+        html.dark .contact-box {
+          background: linear-gradient(120deg, #2b1832, #21142a, #2f1b36);
+          border-color: #4a2c52;
+        }
+        html.dark .timeline { border-left-color: #5a3560; }
+        html.dark .btn-outline { color: #f0b3cf; }
+        html.dark .btn-outline:hover { color: white; }
+
         @media(max-width: 850px) {
           .nav { flex-wrap: wrap; padding: 18px 0; }
           .links { order: 3; width: 100%; gap: 15px; }
@@ -512,10 +575,14 @@ export default function Home() {
           <a href="#about">À propos</a>
           <a href="#skills">Compétences</a>
           <a href="#projects">Projets</a>
+          <a href="#devops">DevOps &amp; Cloud</a>
           <a href="#experience">Expériences</a>
-          <a href="#certificates">Certificats</a>
+          <a href="#certificates">Certifications</a>
           <a href="#languages">Langues</a>
           <a href="#contact">Contact</a>
+          <button type="button" className="theme-toggle" onClick={() => setDark(!dark)}>
+            {dark ? 'Mode clair' : 'Mode sombre'}
+          </button>
         </nav>
         <a className="nav-btn" href="/CV_Hyba_Farhat.pdf" download>↓ Télécharger CV</a>
       </header>
@@ -628,6 +695,51 @@ export default function Home() {
         </div>
       </section>
 
+      <section className="section projects" id="devops">
+        <div className="wrap">
+          <div className="section-title">
+            <div className="eyebrow">DEVOPS &amp; CLOUD</div>
+            <h2>Projets DevOps &amp; Cloud</h2>
+            <p>Automatisation, conteneurisation et d&eacute;ploiement continu.</p>
+          </div>
+          <div className="project-grid">
+            <article className="project">
+              <div className="project-no">01</div>
+              <div className="project-type">PLATFORM ENGINEERING &middot; BACKSTAGE</div>
+              <h3>Portail d&eacute;veloppeur avec Backstage</h3>
+              <p>Un portail unique pour cr&eacute;er, construire, publier et d&eacute;ployer le portfolio sans commande manuelle.</p>
+              <ul>
+                <li>Software Template pour g&eacute;n&eacute;rer le projet Next.js</li>
+                <li>Cr&eacute;ation du d&eacute;p&ocirc;t GitHub et enregistrement dans le catalogue</li>
+                <li>D&eacute;clenchement du workflow de livraison depuis Backstage</li>
+              </ul>
+              <div className="tags">
+                <span className="tag">Backstage</span>
+                <span className="tag">Next.js</span>
+                <span className="tag">GitHub</span>
+              </div>
+            </article>
+            <article className="project">
+              <div className="project-no">02</div>
+              <div className="project-type">CI/CD &middot; DOCKER &middot; D&Eacute;PLOIEMENT</div>
+              <h3>Pipeline de livraison continue</h3>
+              <p>Cha&icirc;ne automatis&eacute;e du code jusqu&apos;au service en ligne, avec versionnement des images.</p>
+              <ul>
+                <li>Build et push de l&apos;image sur Docker Hub (v1, v2...)</li>
+                <li>D&eacute;ploiement local avec Docker Compose sur un runner GitHub Actions</li>
+                <li>V&eacute;rification de sant&eacute; de l&apos;application apr&egrave;s d&eacute;ploiement</li>
+              </ul>
+              <div className="tags">
+                <span className="tag">GitHub Actions</span>
+                <span className="tag">Docker</span>
+                <span className="tag">Docker Compose</span>
+                <span className="tag">Docker Hub</span>
+              </div>
+            </article>
+          </div>
+        </div>
+      </section>
+
       <section className="section" id="experience">
         <div className="wrap">
           <div className="section-title">
@@ -650,7 +762,7 @@ export default function Home() {
         <div className="wrap">
           <div className="section-title">
             <div className="eyebrow">✿ MES DISTINCTIONS ✿</div>
-            <h2>Certificats & distinctions</h2>
+            <h2>Certifications &amp; distinctions</h2>
           </div>
           <div className="cert-grid">
             {certifications.map((cert) => <div className="cert" key={cert}><span>✿</span>{cert}</div>)}
