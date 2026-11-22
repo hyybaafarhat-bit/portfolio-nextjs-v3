@@ -1,392 +1,173 @@
-# PhoneTech Accessories
+# Portfolio Next.js - Industrialisation avec Backstage
 
-## 1. Présentation du projet
+Activité pratique : Platform Engineering avec Backstage (formateur : Wahid Hamdi).
+Ce dépôt contient le portfolio de Hyba Farhat (Next.js) et toute la chaîne de livraison
+automatisée : Backstage, GitHub Actions, Docker Hub et déploiement local.
 
-**PhoneTech Accessories** est un site web e-commerce développé avec **WordPress** dans le cadre du projet Full Stack & Microservices.
+## 1. Architecture
 
-Le site est destiné à une entreprise spécialisée dans la vente d’accessoires pour smartphones. Il permet aux visiteurs de découvrir les produits disponibles, consulter leurs caractéristiques, les ajouter au panier et contacter l’entreprise.
-
-### Objectifs du projet
-
-- Présenter l’entreprise PhoneTech Accessories.
-- Présenter un catalogue d’accessoires pour smartphones.
-- Permettre aux utilisateurs de consulter les produits.
-- Permettre l’ajout des produits au panier.
-- Publier des articles de blog liés aux smartphones et aux nouvelles technologies.
-- Permettre aux visiteurs de contacter l’entreprise.
-- Mettre en place une architecture WordPress fonctionnelle.
-
----
-
-## 2. Technologies et outils utilisés
-
-- **WordPress** : système de gestion de contenu utilisé pour développer le site.
-- **Elementor** : outil utilisé pour créer et personnaliser les différentes pages.
-- **WooCommerce** : extension utilisée pour gérer les produits, le catalogue et le panier.
-- **Contact Form 7** : extension utilisée pour créer le formulaire de contact.
-- **XAMPP** : environnement de développement local.
-- **Apache** : serveur web local.
-- **MySQL / MariaDB** : système de gestion de la base de données.
-- **phpMyAdmin** : outil utilisé pour gérer et exporter la base de données.
-- **HTML / CSS** : utilisés indirectement pour la structure et la présentation des pages.
-
----
-
-## 3. Étapes de réalisation
-
-### Étape 1 — Installation de l'environnement
-
-Nous avons commencé par installer et configurer **XAMPP** afin de créer un environnement de développement local.
-
-Les services suivants ont été activés :
-
-- Apache
-- MySQL
-
-WordPress a ensuite été installé dans le dossier :
-
-```text
-C:\xampp\htdocs\wordpress
+```
+Backstage (http://localhost:3002)
+   |  template "Deploy Portfolio" (action github:actions:dispatch, input: version)
+   v
+GitHub Actions - workflow "Build, Push and Deploy" (.github/workflows/build.yml)
+   |-- job build  (ubuntu-latest) : build de l'image Docker + push sur Docker Hub
+   |-- job deploy (runner self-hosted sur le poste local) : docker compose up -d + health check
+   v
+Application accessible sur http://localhost:3000
 ```
 
-Une base de données a été créée dans MySQL pour le projet.
+| Composant | Rôle |
+|---|---|
+| Next.js 15.5.29 | Application portfolio |
+| Dockerfile / docker-compose.yml | Conteneurisation et déploiement |
+| GitHub Actions | Build, push et déploiement automatiques |
+| Docker Hub | Registre des images `hybafarhat/portfolio-nextjs:<version>` |
+| Runner self-hosted | Exécute le déploiement sur la machine locale |
+| Backstage | Portail développeur : création du projet et déclenchement du workflow |
 
-### Étape 2 — Installation et configuration de WordPress
+## 2. Contenu du dépôt
 
-Après l'installation de WordPress, nous avons configuré :
+| Fichier | Description |
+|---|---|
+| `app/page.js`, `app/layout.js` | Pages du portfolio (sections, mode sombre) |
+| `Dockerfile` | Image Node 20 Alpine : `npm ci`, `npm run build`, `npm start` sur le port 3000 |
+| `.dockerignore` | Exclut `node_modules`, `.next`, etc. |
+| `docker-compose.yml` | Service `portfolio-nextjs`, image `hybafarhat/portfolio-nextjs:${VERSION:-v1}`, port `3000:3000`, healthcheck |
+| `.github/workflows/build.yml` | Workflow `workflow_dispatch` avec l'entrée `version` |
+| `catalog-info.yaml` | Composant du catalogue Backstage (annotation `github.com/project-slug`) |
+| `next.config.js` | Configuration Next.js (`outputFileTracingRoot`, ESLint ignoré au build) |
 
-- Le nom du site : **PhoneTech Accessories**
-- Les paramètres généraux de WordPress.
-- Les pages principales du site.
-- La structure de navigation.
+## 3. Templates Backstage
 
-### Étape 3 — Installation des extensions
+Deux templates sont enregistrés dans `app-config.yaml` (section `catalog.locations`) :
 
-#### Elementor
+1. **`portfolio-nextjs-template`** (étapes 1 à 3) : génère le projet Next.js, les fichiers
+   Docker, le workflow et `catalog-info.yaml`, puis ouvre une Pull Request sur GitHub.
+2. **`portfolio-deploy-template`** (étapes 4 à 7) : lance le workflow GitHub Actions avec la
+   version choisie (`v1`, `v2`, `v1.1`...).
 
-Elementor a été utilisé pour concevoir et personnaliser les pages du site.
+Backstage s'exécute sur `http://localhost:3002` afin de laisser le port `3000` au portfolio.
+(`app.baseUrl` et `backend.cors.origin` sont réglés sur `3002` dans `app-config.yaml`.)
 
-#### WooCommerce
+## 4. Pipeline de livraison
 
-WooCommerce a été utilisé pour :
+Le workflow `Build, Push and Deploy` s'exécute à la demande avec la version choisie :
 
-- Créer les produits.
-- Afficher le catalogue.
-- Gérer les prix.
-- Ajouter les produits au panier.
-- Gérer les pages Boutique, Panier et Validation de la commande.
+1. **build** : récupération du code, connexion à Docker Hub, construction et push de l'image
+   `hybafarhat/portfolio-nextjs:<version>`.
+2. **deploy** (runner self-hosted) : récupération du code, `docker compose down`,
+   `docker compose pull`, `docker compose up -d`.
+3. **Vérification de santé** : requêtes sur `http://localhost:3000` (12 tentatives, 5 s d'intervalle).
 
-#### Contact Form 7
+Les photos et le CV (`hyba.jpg`, `CV_Hyba_Farhat.pdf`) ne sont pas versionnés dans Git.
+Ils sont montés dans le conteneur depuis un dossier local défini par la variable `ASSETS_DIR`
+(par défaut `./public`, et `C:/portfolio-assets` sur le runner).
 
-Contact Form 7 a été utilisé pour créer le formulaire permettant aux visiteurs d'envoyer un message à l'entreprise.
+## 5. Configuration nécessaire
 
----
+**Secrets GitHub** (Settings > Secrets and variables > Actions) :
 
-## 4. Structure du site
+| Secret | Valeur |
+|---|---|
+| `DOCKERHUB_USERNAME` | Nom d'utilisateur Docker Hub |
+| `DOCKERHUB_TOKEN` | Jeton d'accès Docker Hub (lecture/écriture) |
 
-### Accueil
+**Runner self-hosted** : installé dans `C:\actions-runner`, lancé avec `.\run.cmd`
+(Docker Desktop doit être démarré). Sous Windows, la politique d'exécution PowerShell doit
+autoriser les scripts : `Set-ExecutionPolicy -Scope CurrentUser -ExecutionPolicy RemoteSigned`.
 
-La page d'accueil présente :
+**Backstage** : la variable d'environnement `GITHUB_TOKEN` (jeton fine-grained limité au dépôt,
+permissions Actions, Contents et Pull requests en lecture/écriture) doit être définie dans le
+terminal qui lance `yarn start`. Ne jamais écrire ce jeton dans un fichier versionné.
 
-- Le nom de l'entreprise.
-- Une présentation de PhoneTech Accessories.
-- Un bouton permettant d'accéder au catalogue.
-- Une section présentant les produits vedettes.
-- Une présentation rapide de l'entreprise.
+## 6. Démonstration
 
-### Catalogue
+1. Ouvrir `http://localhost:3002/create` et choisir **Deploy Portfolio (build, push, deploy)**.
+2. Saisir la version (par exemple `v1`), puis **Review** et **Create**.
+3. Suivre le workflow sur GitHub Actions (jobs `build` puis `deploy`).
+4. Vérifier le déploiement :
+   ```
+   docker ps
+   ```
+   Le conteneur `portfolio-nextjs` doit être `healthy` sur `0.0.0.0:3000->3000/tcp`.
+5. Ouvrir `http://localhost:3000`.
 
-La page Catalogue présente les accessoires disponibles sous forme de grille.
+## 7. Évolution du portfolio (étape 7)
 
-Les produits sont affichés grâce à WooCommerce.
+Après le premier déploiement (`v1`), les évolutions suivantes ont été ajoutées dans `app/page.js` :
 
-Le catalogue contient notamment :
+- section **Certifications** ;
+- section **Projets DevOps & Cloud** ;
+- **mode sombre** (bouton dans le menu, préférence mémorisée) ;
+- mise à jour des informations personnelles.
 
-- Coques de protection.
-- Chargeurs.
-- Écouteurs sans fil.
-- Batteries externes.
-- Supports pour smartphones.
+Le code a été fusionné dans `main` par Pull Request (la branche est protégée), puis le
+template **Deploy Portfolio** a été relancé depuis Backstage avec la version **`v2`**.
+Le workflow a reconstruit l'application, publié `hybafarhat/portfolio-nextjs:v2` sur
+Docker Hub, remplacé le conteneur local et validé la santé du service.
 
-Les visiteurs peuvent consulter les produits et les ajouter au panier.
-
-### À propos
-
-Cette page présente l'entreprise, sa mission et ses valeurs.
-
-### Blog
-
-Le site contient trois articles :
-
-1. **Les tendances des accessoires mobiles en 2026**
-2. **Conseils pour bien entretenir son smartphone**
-3. **Les innovations technologiques pour les smartphones**
-
-### Contact
-
-La page Contact contient :
-
-- Les informations de contact de l'entreprise.
-- Un formulaire de contact créé avec Contact Form 7.
-- Une présentation des coordonnées de PhoneTech Accessories.
-
----
-
-## 5. Fonctionnalités principales
-
-Le site permet aux utilisateurs de :
-
-- Consulter les différentes pages.
-- Parcourir le catalogue.
-- Consulter les produits.
-- Voir les prix des produits.
-- Ajouter un produit au panier.
-- Consulter le panier.
-- Accéder à la page de validation de commande.
-- Lire les articles du blog.
-- Contacter l'entreprise via le formulaire.
-
----
-
-## 6. Architecture WordPress
-
-L'architecture du projet repose sur **WordPress** comme système central.
-
-```text
-                    UTILISATEUR
-                         |
-                         v
-                  Site WordPress
-                         |
-          +--------------+--------------+
-          |              |              |
-          v              v              v
-       Pages          Plugins         Thème
-          |              |              |
-          |       +------+-------+      |
-          |       |              |      |
-          v       v              v      v
-      Elementor WooCommerce Contact Form 7
-                    |
-                    v
-                Produits
-                    |
-                    v
-                  Panier
-                    |
-                    v
-              Base de données
-                    |
-                    v
-                MySQL/MariaDB
+```
+Modification du code -> Build -> Image Docker -> Docker Hub -> Déploiement local -> Validation
 ```
 
-### Composants de l'architecture
+## 8. Sécurité et dépendances
 
-#### WordPress
+- Next.js a été mis à jour de 14.2.15 vers **15.5.29** pour corriger les vulnérabilités signalées par `npm audit`.
+- Reste une alerte sur `postcss` (dépendance interne de Next.js), sans impact pour un site statique.
+- Jetons GitHub et Docker Hub : jamais dans le code, uniquement dans les secrets ou les variables d'environnement. Les supprimer après la démonstration.
+- Un runner self-hosted sur un dépôt public est déconseillé : exiger une approbation pour les pull requests externes ou passer le dépôt en privé.
 
-WordPress constitue le cœur de l'application. Il permet de gérer les pages, articles, utilisateurs, extensions et paramètres du site.
+## 9. Dépannage
 
-#### Thème
+| Problème | Cause et solution |
+|---|---|
+| `port is already allocated` | Un conteneur utilise déjà le port 3000 : `docker ps`, puis `docker stop <nom>` |
+| Step `deploy` : exécution de scripts désactivée | Politique PowerShell : voir section 5 |
+| `No token available for host: github.com` (Backstage) | `GITHUB_TOKEN` absent du terminal qui lance Backstage |
+| `Bad credentials` | Jeton expiré ou mal copié : en générer un nouveau |
+| `A session for this runner already exists` | Ancienne session du runner : attendre quelques minutes ou fermer le second terminal |
+| Push refusé sur `main` | Branche protégée : passer par une Pull Request |
 
-Le thème WordPress contrôle principalement l'apparence générale du site : mise en page, navigation, en-tête, pied de page et styles généraux.
+## 10. Captures d'écran
 
-#### Elementor
+### Templates enregistrés dans Backstage
 
-Elementor permet de construire visuellement les différentes pages du site.
+Le catalogue de Backstage (`/create`) affiche les deux templates du projet : **Portfolio Next.js**
+(création du projet) et **Deploy Portfolio (build, push, deploy)** (déploiement).
 
-#### WooCommerce
+![Templates Backstage](docs/backstage-templates.jpeg)
 
-WooCommerce ajoute les fonctionnalités e-commerce :
+### Étapes 1 à 3 : création du projet depuis Backstage
 
-```text
-Produits → Catalogue → Panier → Commande
-```
+Le template **Portfolio Next.js** génère les fichiers du projet (Dockerfile, `docker-compose.yml`,
+workflow GitHub Actions) puis crée automatiquement une Pull Request sur GitHub.
 
-#### Contact Form 7
+![Template Portfolio Next.js](docs/backstage-template-portfolio.jpeg)
 
-Contact Form 7 permet de gérer le formulaire de contact.
+### Étapes 4 à 7 : déclenchement du workflow depuis Backstage
 
-#### Base de données
+Le template **Deploy Portfolio** lance le workflow `build.yml` sur GitHub Actions. Le journal
+indique `Workflow build.yml dispatched successfully`, et la page propose les liens vers GitHub
+Actions et vers l'application locale.
 
-WordPress utilise une base de données **MySQL/MariaDB** pour stocker notamment :
+![Déclenchement du workflow depuis Backstage](docs/backstage-deploy-task.jpeg)
 
-- Les pages.
-- Les articles.
-- Les produits.
-- Les utilisateurs.
-- Les paramètres.
-- Les données WooCommerce.
+### Étape 5 : images publiées sur Docker Hub
 
----
+Le dépôt `hybafarhat/portfolio-nextjs` contient les deux versions produites par le pipeline :
+`v1` (premier déploiement) et `v2` (après l'évolution du portfolio).
 
-## 7. Architecture monolithique
+![Tags sur Docker Hub](docs/dockerhub-tags.jpeg)
 
-Une architecture monolithique regroupe les principales fonctionnalités d'une application dans une seule application.
+## 11. Livrables
 
-Dans notre cas, le site WordPress fonctionne principalement comme une application centralisée.
-
-```text
-+--------------------------------------+
-|          APPLICATION WORDPRESS       |
-|                                      |
-|  Pages       Blog       WooCommerce  |
-|  Elementor   Contact    Utilisateurs |
-|                                      |
-+------------------+-------------------+
-                   |
-                   v
-              Base de données
-```
-
-### Avantages
-
-- Architecture simple.
-- Installation facile.
-- Maintenance relativement simple pour un petit projet.
-- Développement rapide.
-- Une seule application à déployer.
-
-### Inconvénients
-
-- Les différentes fonctionnalités sont fortement liées.
-- Une modification importante peut affecter plusieurs parties du système.
-- La montée en charge peut être plus difficile.
-- Une panne de l'application peut affecter l'ensemble du site.
-
----
-
-## 8. Architecture Microservices
-
-Une architecture microservices divise l'application en plusieurs services indépendants.
-
-Chaque service possède une responsabilité spécifique.
-
-Pour un système e-commerce plus complexe, on pourrait avoir :
-
-```text
-                    APPLICATION
-                         |
-       +-----------------+-----------------+
-       |                 |                 |
-       v                 v                 v
- Service Produits   Service Commandes   Service Utilisateurs
-       |                 |                 |
-       v                 v                 v
- Base Produits      Base Commandes    Base Utilisateurs
-
-                         |
-                         v
-                  Service Paiement
-```
-
-Chaque service peut être développé, déployé et maintenu indépendamment.
-
----
-
-## 9. Comparaison Monolithique / Microservices
-
-| Critère | Architecture monolithique | Architecture microservices |
-|---|---|---|
-| Structure | Une seule application | Plusieurs services indépendants |
-| Complexité | Faible à moyenne | Élevée |
-| Développement | Plus simple | Plus complexe |
-| Déploiement | Global | Service par service |
-| Maintenance | Simple pour un petit projet | Plus complexe |
-| Évolutivité | Limitée à grande échelle | Très bonne |
-| Isolation des erreurs | Faible | Meilleure |
-| Communication | Interne à l'application | API / réseau |
-| Base de données | Généralement centralisée | Peut être séparée par service |
-| Adapté à notre projet | Oui | Pas nécessaire pour ce projet |
-
----
-
-## 10. Pourquoi WordPress convient à notre projet ?
-
-Pour **PhoneTech Accessories**, WordPress est adapté car le projet est principalement un site e-commerce de petite taille.
-
-WordPress permet de développer rapidement :
-
-- Les pages du site.
-- Le catalogue.
-- Les produits.
-- Le panier.
-- Le blog.
-- Le formulaire de contact.
-
-WooCommerce ajoute les fonctionnalités nécessaires au commerce électronique sans devoir développer toutes les fonctionnalités depuis zéro.
-
-Une architecture microservices serait plus adaptée à une plateforme beaucoup plus importante avec plusieurs équipes et de nombreux services indépendants.
-
----
-
-## 11. Sauvegarde et export du projet
-
-Afin de permettre la restauration du projet, deux éléments principaux ont été exportés.
-
-### Base de données
-
-La base de données WordPress a été exportée depuis **phpMyAdmin** au format :
-
-```text
-.sql
-```
-
-Elle contient les données nécessaires au fonctionnement du site.
-
-### Fichiers WordPress
-
-Les fichiers du site ont été compressés depuis :
-
-```text
-C:\xampp\htdocs\wordpress
-```
-
-dans une archive :
-
-```text
-wordpress.zip
-```
-
-Ces deux éléments permettent de conserver une copie du projet.
-
----
-
-## 12. Structure des livrables
-
-Le dossier final peut être organisé comme suit :
-
-```text
-PhoneTech-Accessories/
-│
-├── wordpress.zip
-│
-├── phone-tech.sql
-│
-└── README.md
-```
-
-### Description
-
-- `wordpress.zip` : fichiers du site WordPress.
-- `phone-tech.sql` : export de la base de données.
-- `README.md` : documentation du projet.
-
----
-
-## 13. Conclusion
-
-Le projet **PhoneTech Accessories** a permis de mettre en place un site e-commerce fonctionnel avec WordPress.
-
-Le site intègre :
-
-- Une présentation de l'entreprise.
-- Un catalogue de produits.
-- Un système de panier grâce à WooCommerce.
-- Un blog.
-- Un formulaire de contact.
-- Une base de données MySQL/MariaDB.
-
-Le projet utilise principalement une architecture monolithique, ce qui est adapté à la taille et aux besoins actuels du site.
-
-L'étude de l'architecture microservices permet cependant de comprendre comment une application plus importante pourrait être divisée en plusieurs services indépendants afin d'améliorer son évolutivité et sa maintenance.
+1. Templates Backstage : `portfolio-nextjs-template` et `portfolio-deploy-template`
+2. Dépôt Git : `https://github.com/hyybaafarhat-bit/portfolio-nextjs-v3`
+3. Application Portfolio Next.js
+4. `Dockerfile`
+5. `docker-compose.yml`
+6. Images publiées sur Docker Hub : `hybafarhat/portfolio-nextjs:v1` et `:v2`
+7. Documentation technique : ce fichier
+8. Démonstration du workflow Backstage
+9. Démonstration de l'évolution du projet et de la réexécution du pipeline
