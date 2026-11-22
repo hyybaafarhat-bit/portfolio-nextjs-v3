@@ -255,8 +255,9 @@ Déploiement local
 Le catalogue de Backstage (`/create`) affiche les templates du projet :
 **Portfolio Next.js** (création du projet) et **Deploy Portfolio (build,
 push, deploy)** (déploiement).
+![Déclenchement du workflow depuis
+Backstage](docs/backstage-deploy-task.jpeg)
 
-![Templates Backstage](docs/backstage-templates.jpeg)
 
 ### 10.2 Étapes 1 à 3 : création du projet depuis Backstage
 
@@ -264,8 +265,8 @@ Le template **Portfolio Next.js** génère les fichiers du projet
 (Dockerfile, `docker-compose.yml`, workflow GitHub Actions), puis crée
 automatiquement une Pull Request sur GitHub.
 
-![Template Portfolio Next.js](docs/backstage-template-portfolio.jpeg)
 
+![Templates Backstage](docs/backstage-templates.jpeg)
 ### 10.3 Étapes 4 à 7 : déclenchement du workflow depuis Backstage
 
 Le template **Deploy Portfolio** lance le workflow `build.yml` sur
@@ -274,9 +275,8 @@ GitHub Actions.
 Le journal indique `Workflow build.yml dispatched successfully`, et la
 page propose les liens vers GitHub Actions et vers l'application locale.
 
-![Déclenchement du workflow depuis
-Backstage](docs/backstage-deploy-task.jpeg)
 
+![Tags sur Docker Hub](docs/dockerhub-tags.jpeg)
 ### 10.4 Étape 5 : images publiées sur Docker Hub
 
 Le dépôt `hybafarhat/portfolio-nextjs` contient les deux versions
@@ -285,7 +285,7 @@ produites par le pipeline :
 -   `v1` : premier déploiement.
 -   `v2` : après l'évolution du portfolio.
 
-![Tags sur Docker Hub](docs/dockerhub-tags.jpeg)
+
 
 ## 11. Livrables
 
