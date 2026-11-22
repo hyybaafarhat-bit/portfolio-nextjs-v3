@@ -247,46 +247,28 @@ Déploiement local
   Push refusé sur `main`                       Branche protégée : passer par une
                                                Pull Request.
   --------------------------------------------------------------------------------
-
 ## 10. Captures d'écran
 
 ### 10.1 Templates enregistrés dans Backstage
 
-Le catalogue de Backstage (`/create`) affiche les templates du projet :
-**Portfolio Next.js** (création du projet) et **Deploy Portfolio (build,
-push, deploy)** (déploiement).
-![Déclenchement du workflow depuis
-Backstage](docs/backstage-deploy-task.jpeg)
-
+Le catalogue de Backstage (`/create`) affiche les templates du projet : **Portfolio Next.js** (création du projet) et **Deploy Portfolio (build, push, deploy)** (déploiement).
 
 ### 10.2 Étapes 1 à 3 : création du projet depuis Backstage
 
-Le template **Portfolio Next.js** génère les fichiers du projet
-(Dockerfile, `docker-compose.yml`, workflow GitHub Actions), puis crée
-automatiquement une Pull Request sur GitHub.
+Le template **Portfolio Next.js** génère les fichiers du projet (Dockerfile, `docker-compose.yml`, workflow GitHub Actions), puis crée automatiquement une Pull Request sur GitHub.
 
-
-![Templates Backstage](docs/backstage-templates.jpeg)
 ### 10.3 Étapes 4 à 7 : déclenchement du workflow depuis Backstage
 
-Le template **Deploy Portfolio** lance le workflow `build.yml` sur
-GitHub Actions.
+Le template **Deploy Portfolio** lance le workflow `build.yml` sur GitHub Actions.
 
-Le journal indique `Workflow build.yml dispatched successfully`, et la
-page propose les liens vers GitHub Actions et vers l'application locale.
+Le journal indique `Workflow build.yml dispatched successfully`, et la page propose les liens vers GitHub Actions et vers l'application locale.
 
-
-![Tags sur Docker Hub](docs/dockerhub-tags.jpeg)
 ### 10.4 Étape 5 : images publiées sur Docker Hub
 
-Le dépôt `hybafarhat/portfolio-nextjs` contient les deux versions
-produites par le pipeline :
+Le dépôt `hybafarhat/portfolio-nextjs` contient les deux versions produites par le pipeline :
 
--   `v1` : premier déploiement.
--   `v2` : après l'évolution du portfolio.
-
-
-
+- `v1` : premier déploiement.
+- `v2` : après l'évolution du portfolio.
 ## 11. Livrables
 
 1.  Templates Backstage : `portfolio-nextjs-template` et
